@@ -20,6 +20,8 @@ namespace TagsCloudVisualization.Tests
 
         private Bitmap _currentBitmap = null;
 
+        private TagCloudImageGenerator _tagCloudImageGenerator;
+
         [SetUp]
         public void Setup()
         {
@@ -27,6 +29,7 @@ namespace TagsCloudVisualization.Tests
             _layouter = new CircularCloudLayouter(_center);
 
             _visualiser = new Visualiser(Color.Black, 1);
+            _tagCloudImageGenerator = new TagCloudImageGenerator(_visualiser);
         }
 
         [TearDown]
@@ -39,7 +42,9 @@ namespace TagsCloudVisualization.Tests
                 BitmapSaver.SaveToFail(_currentBitmap, fileName);
                 _currentBitmap.Dispose();
             }
+
             _visualiser.Dispose();
+            _tagCloudImageGenerator.Dispose();
         }
 
         [Test]
@@ -108,9 +113,7 @@ namespace TagsCloudVisualization.Tests
         [TestCase(5)]
         public void CircularCloudLayouter_WhenAddFew_ShouldHaveSameCount(int add)
         {
-            var tagCloundGenerator = new TagCloudImageGenerator(_visualiser);
-
-            _currentBitmap = tagCloundGenerator.CreateNewBitmap(new Size(WIDTH, HEIGHT),
+            _currentBitmap = _tagCloudImageGenerator.CreateNewBitmap(new Size(WIDTH, HEIGHT),
                 _layouter,
                 () =>
                 {
@@ -127,10 +130,8 @@ namespace TagsCloudVisualization.Tests
         [TestCase(1, 2, 3)]
         public void CircularCloudLayouter_WhenAddFewButWasBefore_ShouldHaveCorrectCount(int countBefore, int add, int countAfter)
         {
-            var tagCloundGenerator = new TagCloudImageGenerator(_visualiser);
-
             //Создали состояние countBefore
-            _currentBitmap = tagCloundGenerator.CreateNewBitmap(new Size(WIDTH, HEIGHT),
+            _currentBitmap = _tagCloudImageGenerator.CreateNewBitmap(new Size(WIDTH, HEIGHT),
                 _layouter,
                 () =>
                 {
@@ -142,7 +143,7 @@ namespace TagsCloudVisualization.Tests
                 });
 
             //Создали состояние countAfter
-            tagCloundGenerator.AddToCurrentImage(_currentBitmap,
+            _tagCloudImageGenerator.AddToCurrentImage(_currentBitmap,
                 _layouter,
                 () =>
                 {
@@ -160,10 +161,8 @@ namespace TagsCloudVisualization.Tests
         [TestCase(30)]
         public void CircularCloudLayouter_WhenAddFew_RectangleNotIntersectsWithOtherRectangles(int count)
         {
-            var tagCloundGenerator = new TagCloudImageGenerator(_visualiser);
-
             //Создали состояние countBefore
-            _currentBitmap = tagCloundGenerator.CreateNewBitmap(new Size(WIDTH, HEIGHT),
+            _currentBitmap = _tagCloudImageGenerator.CreateNewBitmap(new Size(WIDTH, HEIGHT),
                 _layouter,
                 () =>
                 {

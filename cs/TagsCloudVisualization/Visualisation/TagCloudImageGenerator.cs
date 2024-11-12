@@ -3,9 +3,11 @@ using TagsCloudVisualization.CloudClasses;
 
 namespace TagsCloudVisualization.Visualisation
 {
-    public class TagCloudImageGenerator
+    public class TagCloudImageGenerator : IDisposable
     {
-        public readonly IVisualiser Visualiser;
+        private readonly IVisualiser Visualiser;
+
+        private bool isDisposed = false;
 
         public TagCloudImageGenerator(IVisualiser visualiser)
         {
@@ -32,6 +34,30 @@ namespace TagsCloudVisualization.Visualisation
             {
                 Visualiser.DrawRectangle(bitmap, layouter.PutNextRectangle(size));
             }
+        }
+
+        ~TagCloudImageGenerator()
+        {
+            Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool fromMethod)
+        {
+            if (isDisposed)
+                return;
+
+            if (fromMethod)
+            {
+                Visualiser.Dispose();
+            }
+
+            isDisposed = true;
         }
     }
 }

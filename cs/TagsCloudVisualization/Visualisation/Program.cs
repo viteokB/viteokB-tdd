@@ -7,11 +7,9 @@ namespace TagsCloudVisualization.Visualisation
     {
         public static void Main(string[] args)
         {
-            var visualiser = new Visualiser(Color.Black, 1);
+            using var tagCloudGenerator = new TagCloudImageGenerator(new Visualiser(Color.Black, 1));
 
-            var tagCloundGenerator = new TagCloudImageGenerator(visualiser);
-
-            using var bitmap1 = tagCloundGenerator.CreateNewBitmap(new Size(1000, 1000),
+            using var bitmap1 = tagCloudGenerator.CreateNewBitmap(new Size(1000, 1000),
                 new CircularCloudLayouter(new Point(500, 500)),
                 () =>
             {
@@ -22,7 +20,7 @@ namespace TagsCloudVisualization.Visualisation
                     .Generate();
             });
 
-            using var bitmap2 = tagCloundGenerator.CreateNewBitmap(new Size(1000, 1000),
+            using var bitmap2 = tagCloudGenerator.CreateNewBitmap(new Size(1000, 1000),
                 new CircularCloudLayouter(new Point(500, 500)),
                 () =>
             {
@@ -33,7 +31,7 @@ namespace TagsCloudVisualization.Visualisation
                     .Generate();
             });
 
-            using var bitmap3 = tagCloundGenerator.CreateNewBitmap(new Size(1000, 1000),
+            using var bitmap3 = tagCloudGenerator.CreateNewBitmap(new Size(1000, 1000),
                 new CircularCloudLayouter(new Point(500, 500)),
                 () =>
             {
