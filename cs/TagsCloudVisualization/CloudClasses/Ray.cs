@@ -9,11 +9,11 @@ namespace TagsCloudVisualization.CloudClasses
         //В радианах
         public double Angle { get; private set; }
 
-        public readonly Point RayStart;
+        public readonly Point StartPoint;
 
-        public Ray(Point rayStart, int radius, int angle)
+        public Ray(Point startPoint, int radius, int angle)
         {
-            RayStart = rayStart;
+            StartPoint = startPoint;
 
             Radius = radius;
 
@@ -26,10 +26,10 @@ namespace TagsCloudVisualization.CloudClasses
             Angle += deltaAngle;
         }
 
-        public Point GetEndPoint => new Point
+        public Point EndPoint => new Point
         {
-            X = RayStart.X + (int)(Radius * Math.Cos(Angle)),
-            Y = RayStart.Y + (int)(Radius * Math.Sin(Angle))
+            X = StartPoint.X + (int)(Radius * Math.Cos(Angle)),
+            Y = StartPoint.Y + (int)(Radius * Math.Sin(Angle))
         };
     }
 }
