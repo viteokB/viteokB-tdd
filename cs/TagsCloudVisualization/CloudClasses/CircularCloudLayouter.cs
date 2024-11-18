@@ -6,9 +6,11 @@ namespace TagsCloudVisualization.CloudClasses
 {
     public class CircularCloudLayouter : ICloudLayouter
     {
-        public readonly List<Rectangle> Rectangles = new List<Rectangle>();
+        private readonly List<Rectangle> rectangles = new List<Rectangle>();
 
         public readonly ISpiralRayMover RayMover;
+
+        public List<Rectangle> Rectangles => rectangles;
 
         public CircularCloudLayouter(ISpiralRayMover rayMover)
         {
@@ -36,9 +38,9 @@ namespace TagsCloudVisualization.CloudClasses
                 rectangle = new Rectangle(location, rectangleSize);
 
                 // Проверяем, пересекается ли новый прямоугольник с уже существующими
-                if (!Rectangles.Any(r => r.IntersectsWith(rectangle)))
+                if (!rectangles.Any(r => r.IntersectsWith(rectangle)))
                 {
-                    Rectangles.Add(rectangle);
+                    rectangles.Add(rectangle);
                     return rectangle;
                 }
             }
