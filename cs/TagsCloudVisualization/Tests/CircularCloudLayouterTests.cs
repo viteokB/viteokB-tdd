@@ -6,7 +6,7 @@ using TagsCloudVisualization.Visualisation;
 
 namespace TagsCloudVisualization.Tests
 {
-    public class Tests
+    public class CircularCloudLayouterTests
     {
         private const int WIDTH = 1000;
 
@@ -18,31 +18,25 @@ namespace TagsCloudVisualization.Tests
 
         private IVisualiser _visualiser;
 
-        private Bitmap _currentBitmap = null;
-
         private TagCloudImageGenerator _tagCloudImageGenerator;
 
         [SetUp]
         public void Setup()
         {
             _center = new Point(WIDTH / 2, HEIGHT / 2);
-            _layouter = new CircularCloudLayouter(_center);
+
+            var mover = new SpiralRayMover(_center);
+
+            _layouter = new CircularCloudLayouter(mover);
 
             _visualiser = new Visualiser(Color.Black, 1);
+            
             _tagCloudImageGenerator = new TagCloudImageGenerator(_visualiser);
         }
 
         [TearDown]
         public void Teardown()
         {
-            if (TestContext.CurrentContext.Result.Outcome == ResultState.Failure && _currentBitmap != null)
-            {
-                var fileName = $"{TestContext.CurrentContext.Test.MethodName + Guid.NewGuid()}.png";
-
-                BitmapSaver.SaveToFail(_currentBitmap, fileName);
-                _currentBitmap.Dispose();
-            }
-
             _visualiser.Dispose();
             _tagCloudImageGenerator.Dispose();
         }
@@ -54,11 +48,11 @@ namespace TagsCloudVisualization.Tests
         }
 
         [Test]
-        public void CircularCloudLayouter_WhenCreated_FirstPointEqualsLayouterCenter()
+        public void CircularCloudLayouter_WhenCreated_FirstPointEqualsCenter()
         {
             var firstPoint = _layouter.RayMover.MoveRay().First();
 
-            firstPoint.Should().BeEquivalentTo(_layouter.Center);
+            firstPoint.Should().BeEquivalentTo(_layouter.RayMover.Center);
         }
 
         [Test]
@@ -96,7 +90,9 @@ namespace TagsCloudVisualization.Tests
         [TestCase(-2, -2)]
         public void CircularCloudLayouter_WhenCenterWrong_ThrowArgumentException(int x, int y)
         {
-            Assert.Throws<ArgumentException>(() => new CircularCloudLayouter(new Point(x, y)),
+            var rayMover = new SpiralRayMover(new Point(x, y), 1, 5);
+
+            Assert.Throws<ArgumentException>(() => new CircularCloudLayouter(rayMover),
                 "Center Point should have positive X and Y");
         }
 
@@ -106,32 +102,47 @@ namespace TagsCloudVisualization.Tests
         [TestCase(-2, -2)]
         public void CircularCloudLayouter_WhenNotValidSteps_ThrowArgumentException(int radiusStep, int angleSter)
         {
-            Assert.Throws<ArgumentException>(() => new CircularCloudLayouter(new Point(10, 10), radiusStep, angleSter),
+            var rayMover = new SpiralRayMover(new Point(10, 10), radiusStep, angleSter);
+
+            Assert.Throws<ArgumentException>(() => new CircularCloudLayouter(rayMover), 
                 "radiusStep and angleStep should be positive");
         }
 
-        [TestCase(5)]
-        public void CircularCloudLayouter_WhenAddFew_ShouldHaveSameCount(int add)
+        [Test]
+        public void CircularCloudLayouter_WhenAddFew_ShouldHaveSameCount()
         {
-            _currentBitmap = _tagCloudImageGenerator.CreateNewBitmap(new Size(WIDTH, HEIGHT),
+            var currentBitmap = _tagCloudImageGenerator.CreateNewBitmap(new Size(WIDTH, HEIGHT),
                 _layouter,
                 () =>
                 {
                     return SizeBuilder.Configure()
-                        .SetCount(add)
+                        .SetCount(5)
                         .SetWidth(60, 80)
                         .SetHeight(60, 80)
                         .Generate();
                 });
 
-            _layouter.Rectangles.Should().HaveCount(add);
+            try
+            {
+                _layouter.Rectangles.Should().HaveCount(5);
+            }
+            catch (Exception e)
+            {
+                var fileName = $"{TestContext.CurrentContext.Test.MethodName + Guid.NewGuid()}.png";
+
+                BitmapSaver.SaveToFail(currentBitmap, fileName);
+                currentBitmap.Dispose();
+
+                throw;
+            }
         }
 
         [TestCase(1, 2, 3)]
-        public void CircularCloudLayouter_WhenAddFewButWasBefore_ShouldHaveCorrectCount(int countBefore, int add, int countAfter)
+        public void CircularCloudLayouter_ShouldIncreaseRectangleCountCorrectly(int countBefore, 
+            int add, int countAfter)
         {
             //Создали состояние countBefore
-            _currentBitmap = _tagCloudImageGenerator.CreateNewBitmap(new Size(WIDTH, HEIGHT),
+            var currentBitmap = _tagCloudImageGenerator.CreateNewBitmap(new Size(WIDTH, HEIGHT),
                 _layouter,
                 () =>
                 {
@@ -143,7 +154,7 @@ namespace TagsCloudVisualization.Tests
                 });
 
             //Создали состояние countAfter
-            _tagCloudImageGenerator.AddToCurrentImage(_currentBitmap,
+            _tagCloudImageGenerator.AddToCurrentImage(currentBitmap,
                 _layouter,
                 () =>
                 {
@@ -154,7 +165,19 @@ namespace TagsCloudVisualization.Tests
                         .Generate();
                 });
 
-            _layouter.Rectangles.Should().HaveCount(countAfter);
+            try
+            {
+                _layouter.Rectangles.Should().HaveCount(countAfter);
+            }
+            catch (Exception e)
+            {
+                var fileName = $"{TestContext.CurrentContext.Test.MethodName + Guid.NewGuid()}.png";
+
+                BitmapSaver.SaveToFail(currentBitmap, fileName);
+                currentBitmap.Dispose();
+
+                throw;
+            }
         }
 
         [TestCase(2)]
@@ -162,8 +185,7 @@ namespace TagsCloudVisualization.Tests
         public void CircularCloudLayouter_WhenAddFew_RectangleNotIntersectsWithOtherRectangles(int count)
         {
             //Создали состояние countBefore
-            _currentBitmap = _tagCloudImageGenerator.CreateNewBitmap(new Size(WIDTH, HEIGHT),
-                _layouter,
+            var currentBitmap = _tagCloudImageGenerator.CreateNewBitmap(new Size(WIDTH, HEIGHT), _layouter,
                 () =>
                 {
                     return SizeBuilder.Configure()
@@ -173,12 +195,24 @@ namespace TagsCloudVisualization.Tests
                         .Generate();
                 });
 
-            foreach (var rectangle in _layouter.Rectangles)
+            try
             {
-                _layouter.Rectangles
-                    //Не забываем исключить самого себя.....
-                    .Any(r => r.IntersectsWith(rectangle) && rectangle != r)
-                    .Should().BeFalse();
+                foreach (var rectangle in _layouter.Rectangles)
+                {
+                    _layouter.Rectangles
+                        //Не забываем исключить самого себя.....
+                        .Any(r => r.IntersectsWith(rectangle) && rectangle != r)
+                        .Should().BeFalse();
+                }
+            }
+            catch (Exception e)
+            {
+                var fileName = $"{TestContext.CurrentContext.Test.MethodName + Guid.NewGuid()}.png";
+
+                BitmapSaver.SaveToFail(currentBitmap, fileName);
+                currentBitmap.Dispose();
+
+                throw;
             }
         }
     }
