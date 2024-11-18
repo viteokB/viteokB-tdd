@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using TagsCloudVisualization.CloudClasses;
+using TagsCloudVisualization.CloudClasses.Interfaces;
 
 namespace TagsCloudVisualization.Visualisation
 {
@@ -14,7 +15,7 @@ namespace TagsCloudVisualization.Visualisation
             Visualiser = visualiser;
         }
 
-        public Bitmap CreateNewBitmap(Size bitmapSize, CircularCloudLayouter layouter,
+        public Bitmap CreateNewBitmap(Size bitmapSize, ICloudLayouter layouter,
             Func<IEnumerable<Size>> configurationFunc)
         {
             var newBitmap = new Bitmap(bitmapSize.Width, bitmapSize.Height);
@@ -27,12 +28,32 @@ namespace TagsCloudVisualization.Visualisation
             return newBitmap;
         }
 
-        public void AddToCurrentImage(Bitmap bitmap, CircularCloudLayouter layouter,
+        public Bitmap CreateNewBitmap(Size bitmapSize, List<Rectangle> rectangles)
+        {
+            var newBitmap = new Bitmap(bitmapSize.Width, bitmapSize.Height);
+
+            foreach (var rectangle in rectangles)
+            {
+                Visualiser.DrawRectangle(newBitmap, rectangle);
+            }
+
+            return newBitmap;
+        }
+
+        public void AddToCurrentImage(Bitmap bitmap, ICloudLayouter layouter,
             Func<IEnumerable<Size>> configurationFunc)
         {
             foreach (var size in configurationFunc())
             {
                 Visualiser.DrawRectangle(bitmap, layouter.PutNextRectangle(size));
+            }
+        }
+
+        public void AddToCurrentImage(Bitmap bitmap, List<Rectangle> rectangles)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                Visualiser.DrawRectangle(bitmap, rectangle);
             }
         }
 
