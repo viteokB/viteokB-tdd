@@ -3,14 +3,8 @@
 namespace TagsCloudVisualization.CloudClasses.Interfaces
 {
     // Интерфейс для класса, который перемещает луч по спирали, генерируя последовательность точек.
-    public interface ISpiralRayMover
+    public interface IRayMover
     {
         IEnumerable<Point> MoveRay();
-
-        public Point Center { get; }
-
-        public double RadiusStep { get; }
-
-        public double AngleStep { get; }
     }
 }

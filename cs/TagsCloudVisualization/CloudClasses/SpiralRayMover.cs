@@ -3,7 +3,7 @@ using TagsCloudVisualization.CloudClasses.Interfaces;
 
 namespace TagsCloudVisualization.CloudClasses
 {
-    public class SpiralRayMover : ISpiralRayMover
+    public class SpiralRayMover : IRayMover
     {
         private readonly Ray spiralRay;
 
@@ -17,18 +17,18 @@ namespace TagsCloudVisualization.CloudClasses
         public SpiralRayMover(Point center, double radiusStep = 1, double angleStep = 5,
             int startRadius = 0, int startAngle = 0)
         {
+            if (center.X <= 0 || center.Y <= 0)
+                throw new ArgumentException("SpiralRayMover center Point should have positive X and Y");
+
+            if (radiusStep <= 0 || angleStep <= 0)
+                throw new ArgumentException("radiusStep and angleStep should be positive");
+
             spiralRay = new Ray(center, startRadius, startAngle);
             this.radiusStep = radiusStep;
 
             //Преобразование из градусов в радианы
             this.angleStep = angleStep * Math.PI / 180;
         }
-
-        public Point Center => spiralRay.StartPoint;
-
-        public double RadiusStep => radiusStep;
-
-        public double AngleStep => angleStep;
 
         public IEnumerable<Point> MoveRay()
         {
